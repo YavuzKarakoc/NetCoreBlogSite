@@ -1,6 +1,8 @@
 ﻿using BusinessLayer.Concrete;
+using BusinessLayer.ValidationRules;
 using DataAccessLayer.EntityFramework;
 using EntityLayer.Concrete;
+using FluentValidation.Results;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoreBlog.Controllers
@@ -18,10 +20,23 @@ namespace CoreBlog.Controllers
 		[HttpPost]
 		public IActionResult Index(Writer p)
 		{
-			p.WriterStatus = true;
-			p.WriterAbout = "değişecek burası";
-			wm.WriterAdd(p);
-            return RedirectToAction("Index", "Blog");
+			WriterValidator wv = new WriterValidator();
+			ValidationResult result = wv.Validate(p);
+			if(result.IsValid)
+			{
+                p.WriterStatus = true;
+                p.WriterAbout = "değişecek burası";
+                wm.WriterAdd(p);
+                return RedirectToAction("Index", "Blog");
+			}
+			else
+			{
+				foreach(var item in result.Errors)
+				{
+					ModelState.AddModelError(item.PropertyName, item.ErrorMessage);
+				}
+			}
+			return View();
         }
 	}
 }
